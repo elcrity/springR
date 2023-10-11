@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import javax.persistence.EntityNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -52,6 +53,10 @@ public class TodoService {
         return todoRepository.findByUserId(userId);
     }
 
+    public List<TodoEntity> readAll(){
+        return todoRepository.findAll();
+    }
+
     public List<TodoEntity> update(final TodoEntity entity){
         validate(entity);
 
@@ -61,6 +66,18 @@ public class TodoService {
             todo.setDone(entity.getDone());
             todoRepository.save(todo);
         });
+
+        return read(entity.getUserId());
+    }
+    public List<TodoEntity> delete(final TodoEntity entity){
+        validate(entity);
+
+        try{
+            todoRepository.delete(entity);
+        } catch (Exception e){
+            log.error("delete error" + entity.getId(), e);
+            throw new RuntimeException("delete error" + entity.getId());
+        }
 
         return read(entity.getUserId());
     }

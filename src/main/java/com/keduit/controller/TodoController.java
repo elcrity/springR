@@ -20,15 +20,37 @@ public class TodoController {
     @Autowired
     private TodoService todoService;
 
-    @GetMapping("/test")
-    public ResponseEntity<?> testTodo(){
-        String str = todoService.testService();
+    String tempUser = "TempId";
 
-        List<String> list = new ArrayList<>();
-        list.add(str);
-
-        ResponseDto<String> response = ResponseDto.<String>builder()
+//    @GetMapping("/test")
+//    public ResponseEntity<?> testTodo(){
+//        String str = todoService.testService();
+//
+//        List<String> list = new ArrayList<>();
+//        list.add(str);
+//
+//        ResponseDto<String> response = ResponseDto.<String>builder()
+//                .data(list)
+//                .build();
+//        return ResponseEntity.ok().body(response);
+//    }
+    @GetMapping
+    public ResponseEntity<?> readAllTodo(){
+        List<TodoEntity> list = todoService.readAll();
+        ResponseDto<TodoEntity> response = ResponseDto.<TodoEntity>builder()
                 .data(list)
+                .build();
+        return ResponseEntity.ok().body(response);
+    }
+
+    @GetMapping("/test")
+    public ResponseEntity<?> readTodo(@RequestBody TodoDto dto){
+        TodoEntity entity = TodoDto.toEntity(dto);
+
+        List<TodoEntity> readEntity = todoService.read(entity.getUserId());
+
+        ResponseDto<TodoEntity> response = ResponseDto.<TodoEntity>builder()
+                .data(readEntity)
                 .build();
         return ResponseEntity.ok().body(response);
     }
@@ -38,7 +60,6 @@ public class TodoController {
         try {
             TodoEntity entity = TodoDto.toEntity(dto);
             entity.setId(null);
-            entity.setUserId("TempId");
 
             //서비스로부터 엔티티 List를 가져옴
             List<TodoEntity> entities = todoService.create(entity);
@@ -61,12 +82,9 @@ public class TodoController {
         }
     }
 
-    @PutMapping
+    @PutMapping("/test")
     public ResponseEntity<?> updateTodo(@RequestBody TodoDto dto){
-        String tempUser = "TempId";
-
         TodoEntity entity = TodoDto.toEntity(dto);
-        entity.setUserId(tempUser);
 
         List<TodoEntity> entities = todoService.update(entity);
 
@@ -78,6 +96,30 @@ public class TodoController {
 
         return ResponseEntity.ok().body(response);
 
+    }
+
+    @DeleteMapping("/test")
+    public ResponseEntity<?> deleteTodo(@RequestBody TodoDto dto){
+
+        try {
+            TodoEntity entity = TodoDto.toEntity(dto);
+            entity.setUserId(dto.getUserId());
+
+            List<TodoEntity> entities = todoService.delete(entity);
+
+            List<TodoDto> dtos = entities.stream().map(TodoDto::new).collect(Collectors.toList());
+
+            ResponseDto<TodoDto> response = ResponseDto.<TodoDto>builder()
+                    .data(dtos)
+                    .build();
+            return ResponseEntity.ok().body(response);
+        }catch (Exception e){
+            String error = e.getMessage();
+            ResponseDto<TodoDto> response =  ResponseDto.<TodoDto>builder()
+                    .error(error)
+                    .build();
+            return ResponseEntity.badRequest().body(response);
+        }
     }
 
 }
