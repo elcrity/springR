@@ -4,6 +4,7 @@ import com.keduit.model.UserEntity;
 import com.keduit.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -27,8 +28,14 @@ public class UserService {
         return userRepository.save(userEntity);
     }
 
-    public UserEntity getByCredential(final String username, final String password){
-        return userRepository.findByUsernameAndPassword(username,password);
+    public UserEntity getByCredential(final String username,
+                                      final String password,
+                                      final PasswordEncoder passwordEncoder){
+        final UserEntity oriUser =  userRepository.findByUsername(username);
+        if (oriUser != null && passwordEncoder.matches(password, oriUser.getPassword()) ) {
+            return oriUser;
+        }
+        return null;
 
     }
 
